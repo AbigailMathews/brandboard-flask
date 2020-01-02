@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 from flask_jwt_simple import (
     JWTManager, jwt_required, create_jwt, get_jwt_identity
 )
@@ -30,7 +30,7 @@ Users = {
 }
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, support_credentials=True)
 
 # Setup the Flask-JWT-Simple extension
 app.config['JWT_SECRET_KEY'] = 'super-secret'  # Change this!
@@ -39,12 +39,13 @@ jwt = JWTManager(app)
 # Provide a method to create access tokens. The create_jwt()
 # function is used to actually generate the token
 @app.route('/api/users/login', methods=['POST', 'OPTIONS'])
+@cross_origin(supports_credentials=True)
 def login():
 
     #username = 'demo@appseed.us'
     #password = 'demo'
 
-    #user = {'_id': 1, "email": 'demo@appseed.us', 'name' : "John", 'surname' : "Doe", "token" : create_jwt(identity=username) } 
+    #user = {'_id': 1, "email": 'demo@appseed.us', 'name' : "John", 'surname' : "Doe", "token" : create_jwt(identity=username) }
     #ret  = {'user': user }
 
     #return jsonify(ret), 200
@@ -61,7 +62,7 @@ def login():
 
         username = params['user']['email']
         password = params['user']['password']
-    
+
     # catch JSON format and missing keys (email / password)
     except:
         return jsonify({'errors': {'general' : 'Format error ' }}), 400
@@ -72,11 +73,11 @@ def login():
     user = Users[ username ] # aka email
 
     if not password or password != user['password'] :
-        return jsonify({'errors': {'password' : 'Password is invalid' }}), 400 
+        return jsonify({'errors': {'password' : 'Password is invalid' }}), 400
 
     # inject token
     user["token"] = create_jwt(identity=username)
-    
+
     # build response
     ret  = { 'user': user }
 
